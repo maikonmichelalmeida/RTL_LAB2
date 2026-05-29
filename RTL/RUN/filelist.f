@@ -1,2 +1,2 @@
-../tb/_tb_alu.v
-../alu.v
+../tb/_tb_memory.v
+../memory.v
