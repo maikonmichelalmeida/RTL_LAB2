@@ -1,0 +1,13 @@
+# Arquivos gerados por VCS / Verdi
+simv
+simv.daidir/
+csrc/
+*.log
+*.fsdb
+verdiLog/
+AN.DB/
+ucli.key
+novas.conf
+
+# Configurações locais do editor
+.vscode/
