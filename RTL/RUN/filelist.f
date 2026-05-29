@@ -1,2 +1,2 @@
-../tb/_tb_regbank.v
-../regbank.v
+../tb/_tb_alu.v
+../alu.v
