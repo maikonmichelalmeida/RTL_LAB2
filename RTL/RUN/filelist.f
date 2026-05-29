@@ -1,2 +1,2 @@
-../tb/_tb_mux.v
-../mux.v
+../tb/_tb_regbank.v
+../regbank.v
