@@ -33,7 +33,7 @@ initial begin
 
     errors = 0;
 
-    din1 = 8'hAB;
+    din1 = 8'hAC;
     din2 = 8'h11;
     din3 = 8'h9C;
     din4 = 8'hFF;
