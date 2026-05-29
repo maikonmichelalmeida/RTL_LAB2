@@ -12,7 +12,9 @@ reg  [1:0]       select;
 
 wire [WIDTH-1:0] dout;
 
+integer i;
 integer errors;
+reg [WIDTH-1:0] expected;
 
 mux4 #(
     .WIDTH(WIDTH)
@@ -25,38 +27,37 @@ mux4 #(
     .dout(dout)
 );
 
-task check_output;
-    input [1:0] sel_value;
-    input [WIDTH-1:0] expected_value;
-    begin
-        select = sel_value;
-        #10;
-
-        if (dout !== expected_value) begin
-            $display("ERRO: select=%b | esperado=%h | obtido=%h",
-                     select, expected_value, dout);
-            errors = errors + 1;
-        end else begin
-            $display("OK:   select=%b | dout=%h", select, dout);
-        end
-    end
-endtask
-
 initial begin
     $fsdbDumpfile("test.fsdb");
     $fsdbDumpvars(0, tb_mux);
 
     errors = 0;
 
-    din1 = 8'hAA;
-    din2 = 8'hBB;
-    din3 = 8'hCC;
-    din4 = 8'hDD;
+    din1 = 8'hAB;
+    din2 = 8'hCD;
+    din3 = 8'hEF;
+    din4 = 8'hFF;
 
-    check_output(2'b00, 8'hAA);
-    check_output(2'b01, 8'hBB);
-    check_output(2'b10, 8'hCC);
-    check_output(2'b11, 8'hDD);
+    for (i = 0; i < 4; i = i + 1) begin
+        select = i;
+        #10;
+
+        case (select)
+            2'b00: expected = din1;
+            2'b01: expected = din2;
+            2'b10: expected = din3;
+            2'b11: expected = din4;
+        endcase
+
+        if (dout !== expected) begin
+            $display("ERRO: select=%b | esperado=%h | obtido=%h",
+                     select, expected, dout);
+            errors = errors + 1;
+        end else begin
+            $display("OK:   select=%b | dout=%h",
+                     select, dout);
+        end
+    end
 
     if (errors == 0)
         $display("TESTE CONCLUIDO: MUX FUNCIONANDO CORRETAMENTE.");
