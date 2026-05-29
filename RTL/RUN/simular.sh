@@ -22,8 +22,8 @@ rm -rf simv simv.daidir csrc AN.DB verdiLog ucli.key comp.log sim.log test.fsdb 
 
 echo
 echo "Compilando projeto..."
-vcs -full64 -f filelist.f -debug_access+all -kdb -l comp.log
-
+# vcs -full64 -f filelist.f -debug_access+all -kdb -l comp.log
+vcs -full64 -f filelist.f -debug_access+all +memcbk -kdb -l comp.log
 echo
 echo "Executando testbench..."
 ./simv | tee sim.log

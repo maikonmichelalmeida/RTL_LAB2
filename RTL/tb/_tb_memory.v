@@ -72,6 +72,7 @@ endtask
 initial begin
     $fsdbDumpfile("test.fsdb");
     $fsdbDumpvars(0, tb_memory);
+    $fsdbDumpMDA(0, dut);
 
     clk             = 1'b0;
     memoryWrite     = 1'b0;
