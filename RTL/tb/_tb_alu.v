@@ -4,14 +4,14 @@ module tb_alu;
 
 parameter WIDTH = 8;
 
-localparam OP_ADD = 4'b0001;
-localparam OP_SUB = 4'b0010;
-localparam OP_MUL = 4'b0100;
-localparam OP_DIV = 4'b1000;
+localparam OP_ADD = 3'b000;
+localparam OP_SUB = 3'b001;
+localparam OP_MUL = 3'b010;
+localparam OP_DIV = 3'b011;
 
 reg  [WIDTH-1:0]     in1;
 reg  [WIDTH-1:0]     in2;
-reg  [3:0]           op;
+reg  [2:0]           op;
 reg                  invalid_data;
 
 wire [2*WIDTH-1:0]   out;
@@ -35,7 +35,7 @@ alu #(
 task apply_and_check;
     input [WIDTH-1:0]   test_in1;
     input [WIDTH-1:0]   test_in2;
-    input [3:0]         test_op;
+    input [2:0]         test_op;
     input               test_invalid;
     input [2*WIDTH-1:0] expected_out;
     input               expected_zero;

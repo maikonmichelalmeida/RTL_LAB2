@@ -9,16 +9,61 @@ module top #(
     input  wire [WIDTH-1:0] din_2,
     input  wire [WIDTH-1:0] din_3,
 
-    output wire             cpu_rdy
+    output wire [WIDTH-1:0] dout_low,
+    output wire [WIDTH-1:0] dout_high,
+    output wire             cpu_rdy,
+    output wire             zero,
+    output wire             error
 );
 
 wire [WIDTH-1:0] datain_reg;
 wire [WIDTH-1:0] datain_reg_din;
 wire             datain_reg_en;
 
-// cmd_in tem 7 bits. O regbank existente tem WIDTH=8.
-// Por isso, cmd_in fica em datain_reg[6:0] e datain_reg[7] recebe 0.
+// cmd_in tem 7 bits; o regbank existente tem WIDTH=8.
+// Usamos datain_reg[6:0] para cmd_in e fixamos datain_reg[7] em 0.
 assign datain_reg_din = {1'b0, cmd_in};
+
+wire [1:0] in_select_a;
+wire [1:0] in_select_b;
+wire       aluin_reg_en;
+wire       invalid_data;
+wire [2:0] alu_op;
+wire       memoryWrite;
+wire       memoryRead;
+wire       aluout_reg_en;
+wire       selmux2;
+wire       p_error;
+
+wire [WIDTH-1:0]   alu_in1;
+wire [WIDTH-1:0]   alu_in2;
+wire [2*WIDTH-1:0] alu_out;
+wire               alu_zero;
+wire               alu_error;
+
+wire [2*WIDTH-1:0] memoryWriteData;
+wire [7:0]         memoryAddress;
+wire [2*WIDTH-1:0] memoryOutData;
+
+wire [2*WIDTH-1:0] dout_data;
+
+reg zero_reg;
+reg error_reg;
+
+// Entradas temporarias da ALU.
+// Depois serao substituidas pelas saidas dos registradores A e B.
+assign alu_in1 = 8'd10;
+assign alu_in2 = 8'd3;
+
+assign memoryWriteData = {2*WIDTH{1'b0}};
+assign memoryAddress   = 8'b00000000;
+
+assign p_error = alu_error;
+
+assign dout_data = (selmux2) ? memoryOutData : alu_out;
+
+assign zero  = zero_reg;
+assign error = error_reg;
 
 regbank #(
     .WIDTH(WIDTH)
@@ -34,8 +79,71 @@ control control_inst (
     clk,
     rst,
     datain_reg[6:0],
+    p_error,
     datain_reg_en,
-    cpu_rdy
+    cpu_rdy,
+    in_select_a,
+    in_select_b,
+    aluin_reg_en,
+    invalid_data,
+    alu_op,
+    memoryWrite,
+    memoryRead,
+    aluout_reg_en,
+    selmux2
 );
+
+alu #(
+    .WIDTH(WIDTH)
+) alu_inst (
+    alu_in1,
+    alu_in2,
+    alu_op,
+    invalid_data,
+    alu_out,
+    alu_zero,
+    alu_error
+);
+
+memory #(
+    .WIDTH(WIDTH)
+) memory_inst (
+    clk,
+    memoryWrite,
+    memoryRead,
+    memoryWriteData,
+    memoryAddress,
+    memoryOutData
+);
+
+regbank #(
+    .WIDTH(WIDTH)
+) reg_dout_high (
+    clk,
+    rst,
+    aluout_reg_en,
+    dout_data[2*WIDTH-1:WIDTH],
+    dout_high
+);
+
+regbank #(
+    .WIDTH(WIDTH)
+) reg_dout_low (
+    clk,
+    rst,
+    aluout_reg_en,
+    dout_data[WIDTH-1:0],
+    dout_low
+);
+
+always @(posedge clk or posedge rst) begin
+    if (rst) begin
+        zero_reg  <= 1'b0;
+        error_reg <= 1'b0;
+    end else if (aluout_reg_en) begin
+        zero_reg  <= alu_zero;
+        error_reg <= alu_error;
+    end
+end
 
 endmodule

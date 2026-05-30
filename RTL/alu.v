@@ -3,7 +3,7 @@ module alu #(
 )(
     input  wire [WIDTH-1:0]     in1,
     input  wire [WIDTH-1:0]     in2,
-    input  wire [3:0]           op,
+    input  wire [2:0]           op,
     input  wire                 invalid_data,
 
     output reg  [2*WIDTH-1:0]   out,
@@ -11,10 +11,10 @@ module alu #(
     output reg                  error
 );
 
-localparam OP_ADD = 4'b0001;
-localparam OP_SUB = 4'b0010;
-localparam OP_MUL = 4'b0100;
-localparam OP_DIV = 4'b1000;
+localparam OP_ADD = 3'b000;
+localparam OP_SUB = 3'b001;
+localparam OP_MUL = 3'b010;
+localparam OP_DIV = 3'b011;
 
 always @(*) begin
     out   = {2*WIDTH{1'b0}};
@@ -22,7 +22,7 @@ always @(*) begin
     error = 1'b0;
 
     if (invalid_data) begin
-        out   = {2*WIDTH{1'b1}}; // -1 em complemento de dois
+        out   = {2*WIDTH{1'b1}};
         error = 1'b1;
     end else begin
         case (op)
@@ -40,7 +40,7 @@ always @(*) begin
 
             OP_DIV: begin
                 if (in2 == {WIDTH{1'b0}}) begin
-                    out   = {2*WIDTH{1'b1}}; // -1
+                    out   = {2*WIDTH{1'b1}};
                     error = 1'b1;
                 end else begin
                     out = {{WIDTH{1'b0}}, in1} / {{WIDTH{1'b0}}, in2};
@@ -52,8 +52,9 @@ always @(*) begin
             end
         endcase
 
-        if (!error)
+        if (!error) begin
             zero = (out == {2*WIDTH{1'b0}});
+        end
     end
 end
 
