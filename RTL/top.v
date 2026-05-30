@@ -35,8 +35,12 @@ wire       aluout_reg_en;
 wire       selmux2;
 wire       p_error;
 
-wire [WIDTH-1:0]   alu_in1;
-wire [WIDTH-1:0]   alu_in2;
+wire [WIDTH-1:0] mux_a_out;
+wire [WIDTH-1:0] mux_b_out;
+
+wire [WIDTH-1:0] reg_a_out;
+wire [WIDTH-1:0] reg_b_out;
+
 wire [2*WIDTH-1:0] alu_out;
 wire               alu_zero;
 wire               alu_error;
@@ -50,13 +54,9 @@ wire [2*WIDTH-1:0] dout_data;
 reg zero_reg;
 reg error_reg;
 
-// Entradas temporarias da ALU.
-// Depois serao substituidas pelas saidas dos registradores A e B.
-assign alu_in1 = 8'd10;
-assign alu_in2 = 8'd3;
-
 assign memoryWriteData = {2*WIDTH{1'b0}};
-assign memoryAddress   = 8'b00000000;
+
+assign memoryAddress = {{(8-WIDTH){1'b0}}, reg_a_out};
 
 assign p_error = alu_error;
 
@@ -93,11 +93,53 @@ control control_inst (
     selmux2
 );
 
+mux4 #(
+    .WIDTH(WIDTH)
+) mux_a (
+    din_1,
+    din_2,
+    din_3,
+    dout_high,
+    in_select_a,
+    mux_a_out
+);
+
+mux4 #(
+    .WIDTH(WIDTH)
+) mux_b (
+    din_1,
+    din_2,
+    din_3,
+    dout_low,
+    in_select_b,
+    mux_b_out
+);
+
+regbank #(
+    .WIDTH(WIDTH)
+) reg_A (
+    clk,
+    rst,
+    aluin_reg_en,
+    mux_a_out,
+    reg_a_out
+);
+
+regbank #(
+    .WIDTH(WIDTH)
+) reg_B (
+    clk,
+    rst,
+    aluin_reg_en,
+    mux_b_out,
+    reg_b_out
+);
+
 alu #(
     .WIDTH(WIDTH)
 ) alu_inst (
-    alu_in1,
-    alu_in2,
+    reg_a_out,
+    reg_b_out,
     alu_op,
     invalid_data,
     alu_out,
