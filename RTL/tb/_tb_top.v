@@ -35,7 +35,7 @@ task check_datain_reg;
     begin
         #1;
         if (dut.datain_reg !== expected) begin
-            $display("ERRO: tempo=%0t | esperado datain_reg=%b | obtido=%b",
+            $display("ERRO: tempo=%0t | datain_reg esperado=%b | obtido=%b",
                      $time, expected, dut.datain_reg);
             errors = errors + 1;
         end else begin
@@ -50,7 +50,7 @@ task check_control_cmd;
     begin
         #1;
         if (dut.control_inst.cmd_in !== expected) begin
-            $display("ERRO: tempo=%0t | esperado control.cmd_in=%b | obtido=%b",
+            $display("ERRO: tempo=%0t | control.cmd_in esperado=%b | obtido=%b",
                      $time, expected, dut.control_inst.cmd_in);
             errors = errors + 1;
         end else begin
@@ -65,7 +65,7 @@ task check_cpu_rdy;
     begin
         #1;
         if (cpu_rdy !== expected) begin
-            $display("ERRO: tempo=%0t | esperado cpu_rdy=%b | obtido=%b",
+            $display("ERRO: tempo=%0t | cpu_rdy esperado=%b | obtido=%b",
                      $time, expected, cpu_rdy);
             errors = errors + 1;
         end else begin
@@ -83,15 +83,12 @@ initial begin
     rst    = 1'b0;
     cmd_in = 7'b0000000;
 
-    // Constantes externas para testes futuros.
-    // Nesta primeira versao elas entram no top, mas ainda nao sao usadas.
     din_1  = 8'd10;
     din_2  = 8'd3;
     din_3  = 8'd7;
 
     errors = 0;
 
-    // Reset inicial.
     #2;
     rst = 1'b1;
     #2;
@@ -102,28 +99,19 @@ initial begin
 
     rst = 1'b0;
 
-    // Instrucao futura: ADD din_1 + din_2
-    // cmd_in[6:5] = 00
-    // cmd_in[4:3] = 01
-    // cmd_in[2:0] = 000
     cmd_in = 7'b0001000;
-
     @(posedge clk);
     check_datain_reg(8'b00001000);
     check_control_cmd(7'b0001000);
     check_cpu_rdy(1'b0);
 
-    // Outra instrucao ficticia apenas para testar captura.
     cmd_in = 7'b0110010;
-
     @(posedge clk);
     check_datain_reg(8'b00110010);
     check_control_cmd(7'b0110010);
     check_cpu_rdy(1'b0);
 
-    // Outra instrucao ficticia.
     cmd_in = 7'b1011011;
-
     @(posedge clk);
     check_datain_reg(8'b01011011);
     check_control_cmd(7'b1011011);
