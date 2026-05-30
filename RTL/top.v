@@ -51,19 +51,17 @@ wire [2*WIDTH-1:0] memoryOutData;
 
 wire [2*WIDTH-1:0] dout_data;
 
-reg zero_reg;
-reg error_reg;
+reg [1:0] flags_alu;
 
 assign memoryWriteData = {2*WIDTH{1'b0}};
-
-assign memoryAddress = {{(8-WIDTH){1'b0}}, reg_a_out};
-
-assign p_error = alu_error;
+assign memoryAddress   = reg_a_out;
 
 assign dout_data = (selmux2) ? memoryOutData : alu_out;
 
-assign zero  = zero_reg;
-assign error = error_reg;
+assign zero  = flags_alu[1];
+assign error = flags_alu[0];
+
+assign p_error = error;
 
 regbank #(
     .WIDTH(WIDTH)
@@ -180,12 +178,10 @@ regbank #(
 
 always @(posedge clk or posedge rst) begin
     if (rst) begin
-        zero_reg  <= 1'b0;
-        error_reg <= 1'b0;
+        flags_alu <= 2'b00;
     end else if (aluout_reg_en) begin
-        zero_reg  <= alu_zero;
-        error_reg <= alu_error;
+        flags_alu <= {alu_zero, alu_error};
     end
 end
 
-endmodule
+endmodule 
