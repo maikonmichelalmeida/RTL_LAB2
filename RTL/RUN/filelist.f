@@ -1,2 +1,4 @@
-../tb/_tb_memory.v
-../memory.v
+../tb/_tb_top.v
+../top.v
+../control.v
+../regbank.v
