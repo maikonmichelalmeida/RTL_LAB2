@@ -20,6 +20,23 @@ wire             error;
 
 integer errors;
 
+// Selecoes dos MUXes
+localparam SEL_DIN1 = 2'b00;
+localparam SEL_DIN2 = 2'b01;
+localparam SEL_DIN3 = 2'b10;
+localparam SEL_FB   = 2'b11;
+
+// Operacoes
+localparam OP_ADD = 3'b000;
+localparam OP_SUB = 3'b001;
+
+// ADD: A = din_1, B = din_2
+localparam CMD_ADD = {SEL_DIN1, SEL_DIN2, OP_ADD};
+
+// SUB: A = din_3, B = feedback low
+// Com o datapath atual: 8 - 31 = 16'hFFE9
+localparam CMD_SUB = {SEL_DIN3, SEL_FB, OP_SUB};
+
 top #(
     .WIDTH(WIDTH)
 ) dut (
@@ -47,128 +64,127 @@ initial begin
     rst    = 1'b0;
     errors = 0;
 
-    din_1  = 8'd10;
-    din_2  = 8'd3;
-    din_3  = 8'd7;
+    din_1  = 8'd14;
+    din_2  = 8'd17;
+    din_3  = 8'd8;
 
-    // ADD: mux A = din_1, mux B = din_2, opcode = ADD
-    // cmd_in[6:5] = 00 -> din_1
-    // cmd_in[4:3] = 01 -> din_2
-    // cmd_in[2:0] = 000 -> ADD
-    cmd_in = 7'b0001000;
+    cmd_in = CMD_ADD;
 
     $display("");
     $display("============================================");
-    $display("INICIO DO TESTE SIMPLES DO TOP");
-    $display("Objetivo: executar ADD 10 + 3 = 13");
-    $display("cmd_in = %b", cmd_in);
-    $display("din_1  = %d", din_1);
-    $display("din_2  = %d", din_2);
-    $display("din_3  = %d", din_3);
+    $display("TESTE SIMPLES: ADD seguida de SUB com feedback");
+    $display("din_1 = %0d", din_1);
+    $display("din_2 = %0d", din_2);
+    $display("din_3 = %0d", din_3);
+    $display("ADD esperado: 14 + 17 = 31 = 16'h001F");
+    $display("SUB esperado: 8 - 31 = -23 = 16'hFFE9");
     $display("============================================");
 
     #2;
     rst = 1'b1;
     $display("");
-    $display("RESET ATIVADO em t=%0t", $time);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("RESET ATIVADO t=%0t", $time);
 
     #8;
     rst = 1'b0;
-    $display("");
-    $display("RESET DESATIVADO em t=%0t", $time);
+    $display("RESET DESATIVADO t=%0t", $time);
 
     @(posedge clk);
     #1;
     $display("");
-    $display("APOS 1a BORDA");
+    $display("BORDA 1");
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
-    $display("datain_reg=%b control_cmd=%b", dut.datain_reg, dut.control_inst.cmd_in);
-    $display("in_select_a=%b in_select_b=%b", dut.in_select_a, dut.in_select_b);
-    $display("mux_a_out=%h mux_b_out=%h", dut.mux_a_out, dut.mux_b_out);
-    $display("reg_a_out=%h reg_b_out=%h", dut.reg_a_out, dut.reg_b_out);
-    $display("alu_op=%b alu_out=%h alu_zero=%b alu_error=%b",
-             dut.alu_op, dut.alu_out, dut.alu_zero, dut.alu_error);
-    $display("aluin_reg_en=%b aluout_reg_en=%b", dut.aluin_reg_en, dut.aluout_reg_en);
+    $display("cmd_in=%b datain_reg=%b control_cmd=%b", cmd_in, dut.datain_reg, dut.control_inst.cmd_in);
+    $display("reg_a=%h reg_b=%h alu_out=%h", dut.reg_a_out, dut.reg_b_out, dut.alu_out);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
     @(posedge clk);
     #1;
     $display("");
-    $display("APOS 2a BORDA");
+    $display("BORDA 2");
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
-    $display("datain_reg=%b control_cmd=%b", dut.datain_reg, dut.control_inst.cmd_in);
-    $display("in_select_a=%b in_select_b=%b", dut.in_select_a, dut.in_select_b);
+    $display("in_select_a=%b in_select_b=%b aluin_reg_en=%b",
+             dut.in_select_a, dut.in_select_b, dut.aluin_reg_en);
     $display("mux_a_out=%h mux_b_out=%h", dut.mux_a_out, dut.mux_b_out);
-    $display("reg_a_out=%h reg_b_out=%h", dut.reg_a_out, dut.reg_b_out);
-    $display("alu_op=%b alu_out=%h alu_zero=%b alu_error=%b",
-             dut.alu_op, dut.alu_out, dut.alu_zero, dut.alu_error);
-    $display("aluin_reg_en=%b aluout_reg_en=%b", dut.aluin_reg_en, dut.aluout_reg_en);
+    $display("reg_a=%h reg_b=%h alu_out=%h", dut.reg_a_out, dut.reg_b_out, dut.alu_out);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
     @(posedge clk);
     #1;
     $display("");
-    $display("APOS 3a BORDA");
+    $display("BORDA 3");
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
-    $display("datain_reg=%b control_cmd=%b", dut.datain_reg, dut.control_inst.cmd_in);
-    $display("in_select_a=%b in_select_b=%b", dut.in_select_a, dut.in_select_b);
-    $display("mux_a_out=%h mux_b_out=%h", dut.mux_a_out, dut.mux_b_out);
-    $display("reg_a_out=%h reg_b_out=%h", dut.reg_a_out, dut.reg_b_out);
-    $display("alu_op=%b alu_out=%h alu_zero=%b alu_error=%b",
-             dut.alu_op, dut.alu_out, dut.alu_zero, dut.alu_error);
-    $display("aluin_reg_en=%b aluout_reg_en=%b", dut.aluin_reg_en, dut.aluout_reg_en);
+    $display("reg_a=%h reg_b=%h alu_op=%b alu_out=%h",
+             dut.reg_a_out, dut.reg_b_out, dut.alu_op, dut.alu_out);
+    $display("aluout_reg_en=%b dout_data=%h", dut.aluout_reg_en, dut.dout_data);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
+
+    // Coloca a proxima instrucao antes da borda em que o estado STORE captura novo cmd_in.
+    cmd_in = CMD_SUB;
+    $display("");
+    $display("cmd_in atualizado para SUB antes da captura: %b", cmd_in);
 
     @(posedge clk);
     #1;
     $display("");
-    $display("APOS 4a BORDA");
+    $display("BORDA 4 - ADD deve estar registrada na saida");
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
     $display("datain_reg=%b control_cmd=%b", dut.datain_reg, dut.control_inst.cmd_in);
-    $display("in_select_a=%b in_select_b=%b", dut.in_select_a, dut.in_select_b);
-    $display("mux_a_out=%h mux_b_out=%h", dut.mux_a_out, dut.mux_b_out);
-    $display("reg_a_out=%h reg_b_out=%h", dut.reg_a_out, dut.reg_b_out);
-    $display("alu_op=%b alu_out=%h alu_zero=%b alu_error=%b",
-             dut.alu_op, dut.alu_out, dut.alu_zero, dut.alu_error);
-    $display("aluin_reg_en=%b aluout_reg_en=%b", dut.aluin_reg_en, dut.aluout_reg_en);
+    $display("reg_a=%h reg_b=%h alu_out=%h", dut.reg_a_out, dut.reg_b_out, dut.alu_out);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
-    @(posedge clk);
-    #1;
-    $display("");
-    $display("APOS 5a BORDA");
-    $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
-    $display("datain_reg=%b control_cmd=%b", dut.datain_reg, dut.control_inst.cmd_in);
-    $display("in_select_a=%b in_select_b=%b", dut.in_select_a, dut.in_select_b);
-    $display("mux_a_out=%h mux_b_out=%h", dut.mux_a_out, dut.mux_b_out);
-    $display("reg_a_out=%h reg_b_out=%h", dut.reg_a_out, dut.reg_b_out);
-    $display("alu_op=%b alu_out=%h alu_zero=%b alu_error=%b",
-             dut.alu_op, dut.alu_out, dut.alu_zero, dut.alu_error);
-    $display("aluin_reg_en=%b aluout_reg_en=%b", dut.aluin_reg_en, dut.aluout_reg_en);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
-
-    $display("");
-    $display("CHECAGEM FINAL DA ADD");
-    $display("Esperado: dout_high=00 dout_low=0d zero=0 error=0");
-    $display("Obtido:   dout_high=%h dout_low=%h zero=%b error=%b",
-             dout_high, dout_low, zero, error);
-
-    if ((dout_high !== 8'h00) ||
-        (dout_low  !== 8'h0D) ||
-        (zero      !== 1'b0)  ||
-        (error     !== 1'b0)) begin
-
-        $display("ERRO: ADD ainda nao chegou corretamente na saida.");
+    if ((dout_high !== 8'h00) || (dout_low !== 8'h1F) ||
+        (zero !== 1'b0) || (error !== 1'b0)) begin
+        $display("ERRO NA ADD: esperado dout_high=00 dout_low=1F zero=0 error=0");
         errors = errors + 1;
     end else begin
-        $display("OK: ADD executada corretamente.");
+        $display("OK NA ADD: 14 + 17 = 31");
+    end
+
+    @(posedge clk);
+    #1;
+    $display("");
+    $display("BORDA 5 - SUB captura operandos");
+    $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
+    $display("in_select_a=%b in_select_b=%b aluin_reg_en=%b",
+             dut.in_select_a, dut.in_select_b, dut.aluin_reg_en);
+    $display("mux_a_out=%h mux_b_out=%h", dut.mux_a_out, dut.mux_b_out);
+    $display("reg_a=%h reg_b=%h", dut.reg_a_out, dut.reg_b_out);
+    $display("alu_op=%b alu_out=%h", dut.alu_op, dut.alu_out);
+    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
+             dout_high, dout_low, zero, error, cpu_rdy);
+
+    @(posedge clk);
+    #1;
+    $display("");
+    $display("BORDA 6 - SUB em EXECUTE/STORE");
+    $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
+    $display("reg_a=%h reg_b=%h alu_op=%b alu_out=%h",
+             dut.reg_a_out, dut.reg_b_out, dut.alu_op, dut.alu_out);
+    $display("alu_zero=%b alu_error=%b", dut.alu_zero, dut.alu_error);
+    $display("aluout_reg_en=%b dout_data=%h", dut.aluout_reg_en, dut.dout_data);
+    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
+             dout_high, dout_low, zero, error, cpu_rdy);
+
+    @(posedge clk);
+    #1;
+    $display("");
+    $display("BORDA 7 - SUB deve estar registrada na saida");
+    $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
+    $display("reg_a=%h reg_b=%h alu_out=%h", dut.reg_a_out, dut.reg_b_out, dut.alu_out);
+    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
+             dout_high, dout_low, zero, error, cpu_rdy);
+
+    if ((dout_high !== 8'hFF) || (dout_low !== 8'hE9) ||
+        (zero !== 1'b0) || (error !== 1'b0)) begin
+        $display("ERRO NA SUB: esperado dout_high=FF dout_low=E9 zero=0 error=0");
+        errors = errors + 1;
+    end else begin
+        $display("OK NA SUB: 8 - 31 = -23 = 16'hFFE9");
     end
 
     rst = 1'b1;
