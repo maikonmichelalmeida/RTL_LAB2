@@ -53,10 +53,17 @@ wire [2*WIDTH-1:0] dout_data;
 
 reg [1:0] flags_alu;
 
+// Apenas sinais auxiliares para visualizacao no testbench.
+wire [1:0] flags_reg_in;
+wire [1:0] flags_reg_out;
+
 assign memoryWriteData = {2*WIDTH{1'b0}};
 assign memoryAddress   = reg_a_out;
 
 assign dout_data = (selmux2) ? memoryOutData : alu_out;
+
+assign flags_reg_in  = {alu_zero, alu_error};
+assign flags_reg_out = flags_alu;
 
 assign zero  = flags_alu[1];
 assign error = flags_alu[0];
@@ -184,4 +191,4 @@ always @(posedge clk or posedge rst) begin
     end
 end
 
-endmodule 
+endmodule

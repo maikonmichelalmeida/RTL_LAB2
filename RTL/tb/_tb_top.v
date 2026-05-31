@@ -32,20 +32,20 @@ localparam OP_SUB = 3'b001;
 localparam OP_MUL = 3'b010;
 localparam OP_DIV = 3'b011;
 
-// ADD: A = din_1, B = din_2 -> 14 + 17 = 31
+// ADD: A = din_1, B = din_2 -> 14 + 17 = 31 = 16'h001F
 localparam CMD_ADD = {SEL_DIN1, SEL_DIN2, OP_ADD};
 
-// SUB: A = din_3, B = feedback low -> 8 - 31 = -23 = FFE9
+// SUB: A = din_3, B = dout_low -> 8 - 31 = -23 = 16'hFFE9
 localparam CMD_SUB = {SEL_DIN3, SEL_FB, OP_SUB};
 
-// MUL: A = din_2, B = din_3 -> 17 * 8 = 136
+// MUL: A = din_2, B = din_3 -> 17 * 8 = 136 = 16'h0088
 localparam CMD_MUL = {SEL_DIN2, SEL_DIN3, OP_MUL};
 
-// DIV: A = din_2, B = din_3 -> 17 / 8 = 2
+// DIV: A = din_2, B = din_3 -> 17 / 8 = 2 = 16'h0002
 localparam CMD_DIV = {SEL_DIN2, SEL_DIN3, OP_DIV};
 
-// DIV por zero: A = din_2, B = din_3.
-// Antes dessa instrucao, o testbench coloca din_3 = 0.
+// DIV ZERO: A = din_2, B = din_3.
+// Antes dessa instrucao, din_3 sera alterado para zero.
 localparam CMD_DIV_ZERO = {SEL_DIN2, SEL_DIN3, OP_DIV};
 
 top #(
@@ -87,20 +87,29 @@ initial begin
     $display("din_1 = %0d", din_1);
     $display("din_2 = %0d", din_2);
     $display("din_3 = %0d", din_3);
-    $display("ADD esperado: 14 + 17 = 31 = 16'h001F");
-    $display("SUB esperado: 8 - 31 = -23 = 16'hFFE9");
-    $display("MUL esperado: 17 * 8 = 136 = 16'h0088");
-    $display("DIV esperado: 17 / 8 = 2 = 16'h0002");
-    $display("DIV ZERO esperado: 17 / 0 -> 16'hFFFF, error=1");
+    $display("ADD esperado:      14 + 17 = 31  = 16'h001F");
+    $display("SUB esperado:       8 - 31 = -23 = 16'hFFE9");
+    $display("MUL esperado:      17 * 8  = 136 = 16'h0088");
+    $display("DIV esperado:      17 / 8  = 2   = 16'h0002");
+    $display("DIV ZERO esperado: 17 / 0  -> 16'hFFFF, error=1");
     $display("============================================");
+
+    // ============================================================
+    // RESET INICIAL
+    // ============================================================
 
     #2;
     rst = 1'b1;
+
     $display("");
     $display("RESET ATIVADO t=%0t", $time);
+    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
+             dout_high, dout_low, zero, error, cpu_rdy);
 
     #8;
     rst = 1'b0;
+
+    $display("");
     $display("RESET DESATIVADO t=%0t", $time);
 
     // ============================================================
@@ -112,8 +121,10 @@ initial begin
     $display("");
     $display("ADD - BORDA 1");
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
-    $display("cmd_in=%b datain_reg=%b control_cmd=%b", cmd_in, dut.datain_reg, dut.control_inst.cmd_in);
-    $display("reg_a=%h reg_b=%h alu_out=%h", dut.reg_a_out, dut.reg_b_out, dut.alu_out);
+    $display("cmd_in=%b datain_reg=%b control_cmd=%b",
+             cmd_in, dut.datain_reg, dut.control_inst.cmd_in);
+    $display("reg_a=%h reg_b=%h alu_out=%h",
+             dut.reg_a_out, dut.reg_b_out, dut.alu_out);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
@@ -124,8 +135,10 @@ initial begin
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
     $display("in_select_a=%b in_select_b=%b aluin_reg_en=%b",
              dut.in_select_a, dut.in_select_b, dut.aluin_reg_en);
-    $display("mux_a_out=%h mux_b_out=%h", dut.mux_a_out, dut.mux_b_out);
-    $display("reg_a=%h reg_b=%h alu_out=%h", dut.reg_a_out, dut.reg_b_out, dut.alu_out);
+    $display("mux_a_out=%h mux_b_out=%h",
+             dut.mux_a_out, dut.mux_b_out);
+    $display("reg_a=%h reg_b=%h alu_out=%h",
+             dut.reg_a_out, dut.reg_b_out, dut.alu_out);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
@@ -136,11 +149,17 @@ initial begin
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
     $display("reg_a=%h reg_b=%h alu_op=%b alu_out=%h",
              dut.reg_a_out, dut.reg_b_out, dut.alu_op, dut.alu_out);
-    $display("aluout_reg_en=%b dout_data=%h", dut.aluout_reg_en, dut.dout_data);
+    $display("alu_zero=%b alu_error=%b",
+             dut.alu_zero, dut.alu_error);
+    $display("flags_reg_in=%b flags_reg_out=%b",
+             dut.flags_reg_in, dut.flags_reg_out);
+    $display("aluout_reg_en=%b dout_data=%h",
+             dut.aluout_reg_en, dut.dout_data);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
     cmd_in = CMD_SUB;
+
     $display("");
     $display("cmd_in atualizado para SUB antes da captura: %b", cmd_in);
 
@@ -149,7 +168,10 @@ initial begin
     $display("");
     $display("ADD - BORDA 4: ADD deve estar registrada");
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
-    $display("datain_reg=%b control_cmd=%b", dut.datain_reg, dut.control_inst.cmd_in);
+    $display("datain_reg=%b control_cmd=%b",
+             dut.datain_reg, dut.control_inst.cmd_in);
+    $display("flags_reg_in=%b flags_reg_out=%b p_error=%b",
+             dut.flags_reg_in, dut.flags_reg_out, dut.p_error);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
@@ -172,9 +194,12 @@ initial begin
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
     $display("in_select_a=%b in_select_b=%b aluin_reg_en=%b",
              dut.in_select_a, dut.in_select_b, dut.aluin_reg_en);
-    $display("mux_a_out=%h mux_b_out=%h", dut.mux_a_out, dut.mux_b_out);
-    $display("reg_a=%h reg_b=%h", dut.reg_a_out, dut.reg_b_out);
-    $display("alu_op=%b alu_out=%h", dut.alu_op, dut.alu_out);
+    $display("mux_a_out=%h mux_b_out=%h",
+             dut.mux_a_out, dut.mux_b_out);
+    $display("reg_a=%h reg_b=%h",
+             dut.reg_a_out, dut.reg_b_out);
+    $display("alu_op=%b alu_out=%h",
+             dut.alu_op, dut.alu_out);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
@@ -185,12 +210,17 @@ initial begin
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
     $display("reg_a=%h reg_b=%h alu_op=%b alu_out=%h",
              dut.reg_a_out, dut.reg_b_out, dut.alu_op, dut.alu_out);
-    $display("alu_zero=%b alu_error=%b", dut.alu_zero, dut.alu_error);
-    $display("aluout_reg_en=%b dout_data=%h", dut.aluout_reg_en, dut.dout_data);
+    $display("alu_zero=%b alu_error=%b",
+             dut.alu_zero, dut.alu_error);
+    $display("flags_reg_in=%b flags_reg_out=%b",
+             dut.flags_reg_in, dut.flags_reg_out);
+    $display("aluout_reg_en=%b dout_data=%h",
+             dut.aluout_reg_en, dut.dout_data);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
     cmd_in = CMD_MUL;
+
     $display("");
     $display("cmd_in atualizado para MUL antes da captura: %b", cmd_in);
 
@@ -199,7 +229,10 @@ initial begin
     $display("");
     $display("SUB - BORDA 3: SUB deve estar registrada");
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
-    $display("datain_reg=%b control_cmd=%b", dut.datain_reg, dut.control_inst.cmd_in);
+    $display("datain_reg=%b control_cmd=%b",
+             dut.datain_reg, dut.control_inst.cmd_in);
+    $display("flags_reg_in=%b flags_reg_out=%b p_error=%b",
+             dut.flags_reg_in, dut.flags_reg_out, dut.p_error);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
@@ -222,9 +255,12 @@ initial begin
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
     $display("in_select_a=%b in_select_b=%b aluin_reg_en=%b",
              dut.in_select_a, dut.in_select_b, dut.aluin_reg_en);
-    $display("mux_a_out=%h mux_b_out=%h", dut.mux_a_out, dut.mux_b_out);
-    $display("reg_a=%h reg_b=%h", dut.reg_a_out, dut.reg_b_out);
-    $display("alu_op=%b alu_out=%h", dut.alu_op, dut.alu_out);
+    $display("mux_a_out=%h mux_b_out=%h",
+             dut.mux_a_out, dut.mux_b_out);
+    $display("reg_a=%h reg_b=%h",
+             dut.reg_a_out, dut.reg_b_out);
+    $display("alu_op=%b alu_out=%h",
+             dut.alu_op, dut.alu_out);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
@@ -235,12 +271,17 @@ initial begin
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
     $display("reg_a=%h reg_b=%h alu_op=%b alu_out=%h",
              dut.reg_a_out, dut.reg_b_out, dut.alu_op, dut.alu_out);
-    $display("alu_zero=%b alu_error=%b", dut.alu_zero, dut.alu_error);
-    $display("aluout_reg_en=%b dout_data=%h", dut.aluout_reg_en, dut.dout_data);
+    $display("alu_zero=%b alu_error=%b",
+             dut.alu_zero, dut.alu_error);
+    $display("flags_reg_in=%b flags_reg_out=%b",
+             dut.flags_reg_in, dut.flags_reg_out);
+    $display("aluout_reg_en=%b dout_data=%h",
+             dut.aluout_reg_en, dut.dout_data);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
     cmd_in = CMD_DIV;
+
     $display("");
     $display("cmd_in atualizado para DIV antes da captura: %b", cmd_in);
 
@@ -249,7 +290,10 @@ initial begin
     $display("");
     $display("MUL - BORDA 3: MUL deve estar registrada");
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
-    $display("datain_reg=%b control_cmd=%b", dut.datain_reg, dut.control_inst.cmd_in);
+    $display("datain_reg=%b control_cmd=%b",
+             dut.datain_reg, dut.control_inst.cmd_in);
+    $display("flags_reg_in=%b flags_reg_out=%b p_error=%b",
+             dut.flags_reg_in, dut.flags_reg_out, dut.p_error);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
@@ -272,9 +316,12 @@ initial begin
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
     $display("in_select_a=%b in_select_b=%b aluin_reg_en=%b",
              dut.in_select_a, dut.in_select_b, dut.aluin_reg_en);
-    $display("mux_a_out=%h mux_b_out=%h", dut.mux_a_out, dut.mux_b_out);
-    $display("reg_a=%h reg_b=%h", dut.reg_a_out, dut.reg_b_out);
-    $display("alu_op=%b alu_out=%h", dut.alu_op, dut.alu_out);
+    $display("mux_a_out=%h mux_b_out=%h",
+             dut.mux_a_out, dut.mux_b_out);
+    $display("reg_a=%h reg_b=%h",
+             dut.reg_a_out, dut.reg_b_out);
+    $display("alu_op=%b alu_out=%h",
+             dut.alu_op, dut.alu_out);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
@@ -285,13 +332,18 @@ initial begin
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
     $display("reg_a=%h reg_b=%h alu_op=%b alu_out=%h",
              dut.reg_a_out, dut.reg_b_out, dut.alu_op, dut.alu_out);
-    $display("alu_zero=%b alu_error=%b", dut.alu_zero, dut.alu_error);
-    $display("aluout_reg_en=%b dout_data=%h", dut.aluout_reg_en, dut.dout_data);
+    $display("alu_zero=%b alu_error=%b",
+             dut.alu_zero, dut.alu_error);
+    $display("flags_reg_in=%b flags_reg_out=%b",
+             dut.flags_reg_in, dut.flags_reg_out);
+    $display("aluout_reg_en=%b dout_data=%h",
+             dut.aluout_reg_en, dut.dout_data);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
     din_3  = 8'd0;
     cmd_in = CMD_DIV_ZERO;
+
     $display("");
     $display("din_3 alterado para 0");
     $display("cmd_in atualizado para DIV ZERO antes da captura: %b", cmd_in);
@@ -301,7 +353,10 @@ initial begin
     $display("");
     $display("DIV - BORDA 3: DIV deve estar registrada");
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
-    $display("datain_reg=%b control_cmd=%b", dut.datain_reg, dut.control_inst.cmd_in);
+    $display("datain_reg=%b control_cmd=%b",
+             dut.datain_reg, dut.control_inst.cmd_in);
+    $display("flags_reg_in=%b flags_reg_out=%b p_error=%b",
+             dut.flags_reg_in, dut.flags_reg_out, dut.p_error);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
@@ -324,9 +379,12 @@ initial begin
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
     $display("in_select_a=%b in_select_b=%b aluin_reg_en=%b",
              dut.in_select_a, dut.in_select_b, dut.aluin_reg_en);
-    $display("mux_a_out=%h mux_b_out=%h", dut.mux_a_out, dut.mux_b_out);
-    $display("reg_a=%h reg_b=%h", dut.reg_a_out, dut.reg_b_out);
-    $display("alu_op=%b alu_out=%h", dut.alu_op, dut.alu_out);
+    $display("mux_a_out=%h mux_b_out=%h",
+             dut.mux_a_out, dut.mux_b_out);
+    $display("reg_a=%h reg_b=%h",
+             dut.reg_a_out, dut.reg_b_out);
+    $display("alu_op=%b alu_out=%h",
+             dut.alu_op, dut.alu_out);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
@@ -337,8 +395,12 @@ initial begin
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
     $display("reg_a=%h reg_b=%h alu_op=%b alu_out=%h",
              dut.reg_a_out, dut.reg_b_out, dut.alu_op, dut.alu_out);
-    $display("alu_zero=%b alu_error=%b", dut.alu_zero, dut.alu_error);
-    $display("aluout_reg_en=%b dout_data=%h", dut.aluout_reg_en, dut.dout_data);
+    $display("alu_zero=%b alu_error=%b",
+             dut.alu_zero, dut.alu_error);
+    $display("flags_reg_in=%b flags_reg_out=%b",
+             dut.flags_reg_in, dut.flags_reg_out);
+    $display("aluout_reg_en=%b dout_data=%h",
+             dut.aluout_reg_en, dut.dout_data);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
@@ -347,8 +409,10 @@ initial begin
     $display("");
     $display("DIV ZERO - BORDA 3: erro deve estar registrado");
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
-    $display("datain_reg=%b control_cmd=%b", dut.datain_reg, dut.control_inst.cmd_in);
-    $display("reg_a=%h reg_b=%h alu_out=%h", dut.reg_a_out, dut.reg_b_out, dut.alu_out);
+    $display("datain_reg=%b control_cmd=%b",
+             dut.datain_reg, dut.control_inst.cmd_in);
+    $display("reg_a=%h reg_b=%h alu_out=%h",
+             dut.reg_a_out, dut.reg_b_out, dut.alu_out);
     $display("flags_reg_in=%b flags_reg_out=%b p_error=%b",
              dut.flags_reg_in, dut.flags_reg_out, dut.p_error);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
@@ -362,8 +426,13 @@ initial begin
         $display("OK NA DIV ZERO: 17 / 0 gerou FFFF e error=1");
     end
 
+    // ============================================================
+    // RESET FINAL
+    // ============================================================
+
     rst = 1'b1;
     #2;
+
     $display("");
     $display("RESET FINAL ATIVADO");
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
