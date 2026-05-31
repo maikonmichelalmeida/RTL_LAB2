@@ -27,26 +27,37 @@ localparam SEL_DIN3 = 2'b10;
 localparam SEL_FB   = 2'b11;
 
 // Operacoes
-localparam OP_ADD = 3'b000;
-localparam OP_SUB = 3'b001;
-localparam OP_MUL = 3'b010;
-localparam OP_DIV = 3'b011;
+localparam OP_ADD   = 3'b000;
+localparam OP_SUB   = 3'b001;
+localparam OP_MUL   = 3'b010;
+localparam OP_DIV   = 3'b011;
+localparam OP_NOP0  = 3'b100;
+localparam OP_LOAD  = 3'b101;
+localparam OP_STORE = 3'b110;
+localparam OP_NOP1  = 3'b111;
 
-// ADD: A = din_1, B = din_2 -> 14 + 17 = 31 = 16'h001F
+// ADD: A = din_1, B = din_2 -> 200 + 3 = 203 = 16'h00CB
 localparam CMD_ADD = {SEL_DIN1, SEL_DIN2, OP_ADD};
 
-// SUB: A = din_3, B = dout_low -> 8 - 31 = -23 = 16'hFFE9
+// SUB: A = din_3, B = dout_low -> 5 - 203 = -198 = 16'hFF3A
 localparam CMD_SUB = {SEL_DIN3, SEL_FB, OP_SUB};
 
-// MUL: A = din_2, B = din_3 -> 17 * 8 = 136 = 16'h0088
-localparam CMD_MUL = {SEL_DIN2, SEL_DIN3, OP_MUL};
+// MUL: A = din_1, B = din_3 -> 200 * 5 = 1000 = 16'h03E8
+localparam CMD_MUL = {SEL_DIN1, SEL_DIN3, OP_MUL};
 
-// DIV: A = din_2, B = din_3 -> 17 / 8 = 2 = 16'h0002
-localparam CMD_DIV = {SEL_DIN2, SEL_DIN3, OP_DIV};
+// DIV: A = din_1, B = din_3 -> 200 / 5 = 40 = 16'h0028
+localparam CMD_DIV = {SEL_DIN1, SEL_DIN3, OP_DIV};
 
-// DIV ZERO: A = din_2, B = din_3.
-// Antes dessa instrucao, din_3 sera alterado para zero.
-localparam CMD_DIV_ZERO = {SEL_DIN2, SEL_DIN3, OP_DIV};
+// STORE: endereco = reg_A = din_2 = 3
+// No top atual, memoryWriteData ainda vale 16'h0000.
+localparam CMD_STORE = {SEL_DIN2, SEL_DIN1, OP_STORE};
+
+// LOAD: endereco = reg_A = din_2 = 3
+localparam CMD_LOAD = {SEL_DIN2, SEL_DIN1, OP_LOAD};
+
+// NOPs
+localparam CMD_NOP0 = {SEL_DIN1, SEL_DIN1, OP_NOP0};
+localparam CMD_NOP1 = {SEL_DIN1, SEL_DIN1, OP_NOP1};
 
 top #(
     .WIDTH(WIDTH)
@@ -75,23 +86,25 @@ initial begin
     rst    = 1'b0;
     errors = 0;
 
-    din_1  = 8'd14;
-    din_2  = 8'd17;
-    din_3  = 8'd8;
+    din_1  = 8'd200;
+    din_2  = 8'd3;
+    din_3  = 8'd5;
 
     cmd_in = CMD_ADD;
 
     $display("");
     $display("============================================");
-    $display("TESTE DO TOP: ADD, SUB, MUL, DIV E DIV ZERO");
-    $display("din_1 = %0d", din_1);
-    $display("din_2 = %0d", din_2);
-    $display("din_3 = %0d", din_3);
-    $display("ADD esperado:      14 + 17 = 31  = 16'h001F");
-    $display("SUB esperado:       8 - 31 = -23 = 16'hFFE9");
-    $display("MUL esperado:      17 * 8  = 136 = 16'h0088");
-    $display("DIV esperado:      17 / 8  = 2   = 16'h0002");
-    $display("DIV ZERO esperado: 17 / 0  -> 16'hFFFF, error=1");
+    $display("TESTE DO TOP: ADD, SUB, MUL, DIV, STORE, LOAD, NOP");
+    $display("din_1 = %0d = %h", din_1, din_1);
+    $display("din_2 = %0d = %h", din_2, din_2);
+    $display("din_3 = %0d = %h", din_3, din_3);
+    $display("ADD esperado:   200 + 3   = 203  = 16'h00CB");
+    $display("SUB esperado:     5 - 203 = -198 = 16'hFF3A");
+    $display("MUL esperado:   200 * 5   = 1000 = 16'h03E8");
+    $display("DIV esperado:   200 / 5   = 40   = 16'h0028");
+    $display("STORE esperado: grava 16'h0000 no endereco 3");
+    $display("LOAD esperado:  le 16'h0000 do endereco 3");
+    $display("NOP esperado:   mantem saida anterior");
     $display("============================================");
 
     // ============================================================
@@ -175,12 +188,12 @@ initial begin
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
-    if ((dout_high !== 8'h00) || (dout_low !== 8'h1F) ||
+    if ((dout_high !== 8'h00) || (dout_low !== 8'hCB) ||
         (zero !== 1'b0) || (error !== 1'b0)) begin
-        $display("ERRO NA ADD: esperado dout_high=00 dout_low=1F zero=0 error=0");
+        $display("ERRO NA ADD: esperado dout_high=00 dout_low=CB zero=0 error=0");
         errors = errors + 1;
     end else begin
-        $display("OK NA ADD: 14 + 17 = 31");
+        $display("OK NA ADD: 200 + 3 = 203 = 16'h00CB");
     end
 
     // ============================================================
@@ -236,12 +249,12 @@ initial begin
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
-    if ((dout_high !== 8'hFF) || (dout_low !== 8'hE9) ||
+    if ((dout_high !== 8'hFF) || (dout_low !== 8'h3A) ||
         (zero !== 1'b0) || (error !== 1'b0)) begin
-        $display("ERRO NA SUB: esperado dout_high=FF dout_low=E9 zero=0 error=0");
+        $display("ERRO NA SUB: esperado dout_high=FF dout_low=3A zero=0 error=0");
         errors = errors + 1;
     end else begin
-        $display("OK NA SUB: 8 - 31 = -23 = 16'hFFE9");
+        $display("OK NA SUB: 5 - 203 = -198 = 16'hFF3A");
     end
 
     // ============================================================
@@ -297,12 +310,12 @@ initial begin
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
-    if ((dout_high !== 8'h00) || (dout_low !== 8'h88) ||
+    if ((dout_high !== 8'h03) || (dout_low !== 8'hE8) ||
         (zero !== 1'b0) || (error !== 1'b0)) begin
-        $display("ERRO NA MUL: esperado dout_high=00 dout_low=88 zero=0 error=0");
+        $display("ERRO NA MUL: esperado dout_high=03 dout_low=E8 zero=0 error=0");
         errors = errors + 1;
     end else begin
-        $display("OK NA MUL: 17 * 8 = 136");
+        $display("OK NA MUL: 200 * 5 = 1000 = 16'h03E8");
     end
 
     // ============================================================
@@ -341,12 +354,10 @@ initial begin
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
-    din_3  = 8'd0;
-    cmd_in = CMD_DIV_ZERO;
+    cmd_in = CMD_STORE;
 
     $display("");
-    $display("din_3 alterado para 0");
-    $display("cmd_in atualizado para DIV ZERO antes da captura: %b", cmd_in);
+    $display("cmd_in atualizado para STORE antes da captura: %b", cmd_in);
 
     @(posedge clk);
     #1;
@@ -360,70 +371,202 @@ initial begin
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
-    if ((dout_high !== 8'h00) || (dout_low !== 8'h02) ||
+    if ((dout_high !== 8'h00) || (dout_low !== 8'h28) ||
         (zero !== 1'b0) || (error !== 1'b0)) begin
-        $display("ERRO NA DIV: esperado dout_high=00 dout_low=02 zero=0 error=0");
+        $display("ERRO NA DIV: esperado dout_high=00 dout_low=28 zero=0 error=0");
         errors = errors + 1;
     end else begin
-        $display("OK NA DIV: 17 / 8 = 2");
+        $display("OK NA DIV: 200 / 5 = 40 = 16'h0028");
     end
 
     // ============================================================
-    // DIV POR ZERO
+    // STORE
     // ============================================================
 
     @(posedge clk);
     #1;
     $display("");
-    $display("DIV ZERO - BORDA 1: captura operandos");
+    $display("STORE - BORDA 1: captura endereco em reg_A");
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
     $display("in_select_a=%b in_select_b=%b aluin_reg_en=%b",
              dut.in_select_a, dut.in_select_b, dut.aluin_reg_en);
-    $display("mux_a_out=%h mux_b_out=%h",
-             dut.mux_a_out, dut.mux_b_out);
-    $display("reg_a=%h reg_b=%h",
-             dut.reg_a_out, dut.reg_b_out);
-    $display("alu_op=%b alu_out=%h",
-             dut.alu_op, dut.alu_out);
+    $display("mux_a_out=%h reg_a=%h memoryAddress=%h",
+             dut.mux_a_out, dut.reg_a_out, dut.memoryAddress);
+    $display("memoryWriteData=%h memoryWrite=%b memoryRead=%b",
+             dut.memoryWriteData, dut.memoryWrite, dut.memoryRead);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
     @(posedge clk);
     #1;
     $display("");
-    $display("DIV ZERO - BORDA 2");
+    $display("STORE - BORDA 2");
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
-    $display("reg_a=%h reg_b=%h alu_op=%b alu_out=%h",
-             dut.reg_a_out, dut.reg_b_out, dut.alu_op, dut.alu_out);
-    $display("alu_zero=%b alu_error=%b",
-             dut.alu_zero, dut.alu_error);
-    $display("flags_reg_in=%b flags_reg_out=%b",
-             dut.flags_reg_in, dut.flags_reg_out);
-    $display("aluout_reg_en=%b dout_data=%h",
-             dut.aluout_reg_en, dut.dout_data);
+    $display("memoryAddress=%h memoryWriteData=%h memoryWrite=%b memoryRead=%b",
+             dut.memoryAddress, dut.memoryWriteData, dut.memoryWrite, dut.memoryRead);
+    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
+             dout_high, dout_low, zero, error, cpu_rdy);
+
+    cmd_in = CMD_LOAD;
+
+    $display("");
+    $display("cmd_in atualizado para LOAD antes da captura: %b", cmd_in);
+
+    @(posedge clk);
+    #1;
+    $display("");
+    $display("STORE - BORDA 3: STORE deve ter ocorrido");
+    $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
+    $display("memoryAddress=%h memoryWriteData=%h memoryWrite=%b memoryRead=%b",
+             dut.memoryAddress, dut.memoryWriteData, dut.memoryWrite, dut.memoryRead);
+    $display("memoryOutData=%h", dut.memoryOutData);
+    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
+             dout_high, dout_low, zero, error, cpu_rdy);
+
+    if ((dout_high !== 8'h00) || (dout_low !== 8'h28) ||
+        (zero !== 1'b0) || (error !== 1'b0)) begin
+        $display("ERRO NO STORE: saida deveria manter resultado anterior 0028");
+        errors = errors + 1;
+    end else begin
+        $display("OK NO STORE: saida manteve resultado anterior e memoria recebeu escrita.");
+    end
+
+    // ============================================================
+    // LOAD
+    // ============================================================
+
+    @(posedge clk);
+    #1;
+    $display("");
+    $display("LOAD - BORDA 1: captura endereco em reg_A");
+    $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
+    $display("in_select_a=%b in_select_b=%b aluin_reg_en=%b",
+             dut.in_select_a, dut.in_select_b, dut.aluin_reg_en);
+    $display("mux_a_out=%h reg_a=%h memoryAddress=%h",
+             dut.mux_a_out, dut.reg_a_out, dut.memoryAddress);
+    $display("memoryRead=%b memoryWrite=%b memoryOutData=%h",
+             dut.memoryRead, dut.memoryWrite, dut.memoryOutData);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
     @(posedge clk);
     #1;
     $display("");
-    $display("DIV ZERO - BORDA 3: erro deve estar registrado");
+    $display("LOAD - BORDA 2");
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
-    $display("datain_reg=%b control_cmd=%b",
-             dut.datain_reg, dut.control_inst.cmd_in);
-    $display("reg_a=%h reg_b=%h alu_out=%h",
-             dut.reg_a_out, dut.reg_b_out, dut.alu_out);
+    $display("memoryAddress=%h memoryRead=%b memoryOutData=%h selmux2=%b",
+             dut.memoryAddress, dut.memoryRead, dut.memoryOutData, dut.selmux2);
+    $display("dout_data=%h aluout_reg_en=%b",
+             dut.dout_data, dut.aluout_reg_en);
+    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
+             dout_high, dout_low, zero, error, cpu_rdy);
+
+    cmd_in = CMD_NOP0;
+
+    $display("");
+    $display("cmd_in atualizado para NOP0 antes da captura: %b", cmd_in);
+
+    @(posedge clk);
+    #1;
+    $display("");
+    $display("LOAD - BORDA 3: LOAD deve estar registrado");
+    $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
+    $display("memoryOutData=%h selmux2=%b",
+             dut.memoryOutData, dut.selmux2);
     $display("flags_reg_in=%b flags_reg_out=%b p_error=%b",
              dut.flags_reg_in, dut.flags_reg_out, dut.p_error);
     $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
              dout_high, dout_low, zero, error, cpu_rdy);
 
-    if ((dout_high !== 8'hFF) || (dout_low !== 8'hFF) ||
-        (zero !== 1'b0) || (error !== 1'b1)) begin
-        $display("ERRO NA DIV ZERO: esperado dout_high=FF dout_low=FF zero=0 error=1");
+    if ((dout_high !== 8'h00) || (dout_low !== 8'h00) ||
+        (zero !== 1'b1) || (error !== 1'b0)) begin
+        $display("ERRO NO LOAD: esperado dout_high=00 dout_low=00 zero=1 error=0");
         errors = errors + 1;
     end else begin
-        $display("OK NA DIV ZERO: 17 / 0 gerou FFFF e error=1");
+        $display("OK NO LOAD: leu 16'h0000 da memoria.");
+    end
+
+    // ============================================================
+    // NOP0
+    // ============================================================
+
+    @(posedge clk);
+    #1;
+    $display("");
+    $display("NOP0 - BORDA 1");
+    $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
+    $display("cmd_in=%b datain_reg=%b control_cmd=%b",
+             cmd_in, dut.datain_reg, dut.control_inst.cmd_in);
+    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
+             dout_high, dout_low, zero, error, cpu_rdy);
+
+    @(posedge clk);
+    #1;
+    $display("");
+    $display("NOP0 - BORDA 2");
+    $display("state=%b next=%b aluout_reg_en=%b",
+             dut.control_inst.current_state, dut.control_inst.next_state, dut.aluout_reg_en);
+    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
+             dout_high, dout_low, zero, error, cpu_rdy);
+
+    cmd_in = CMD_NOP1;
+
+    $display("");
+    $display("cmd_in atualizado para NOP1 antes da captura: %b", cmd_in);
+
+    @(posedge clk);
+    #1;
+    $display("");
+    $display("NOP0 - BORDA 3: saida deve permanecer igual");
+    $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
+    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
+             dout_high, dout_low, zero, error, cpu_rdy);
+
+    if ((dout_high !== 8'h00) || (dout_low !== 8'h00) ||
+        (zero !== 1'b1) || (error !== 1'b0)) begin
+        $display("ERRO NO NOP0: saida deveria permanecer 0000 com zero=1");
+        errors = errors + 1;
+    end else begin
+        $display("OK NO NOP0: saida permaneceu igual.");
+    end
+
+    // ============================================================
+    // NOP1
+    // ============================================================
+
+    @(posedge clk);
+    #1;
+    $display("");
+    $display("NOP1 - BORDA 1");
+    $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
+    $display("cmd_in=%b datain_reg=%b control_cmd=%b",
+             cmd_in, dut.datain_reg, dut.control_inst.cmd_in);
+    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
+             dout_high, dout_low, zero, error, cpu_rdy);
+
+    @(posedge clk);
+    #1;
+    $display("");
+    $display("NOP1 - BORDA 2");
+    $display("state=%b next=%b aluout_reg_en=%b",
+             dut.control_inst.current_state, dut.control_inst.next_state, dut.aluout_reg_en);
+    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
+             dout_high, dout_low, zero, error, cpu_rdy);
+
+    @(posedge clk);
+    #1;
+    $display("");
+    $display("NOP1 - BORDA 3: saida deve permanecer igual");
+    $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
+    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
+             dout_high, dout_low, zero, error, cpu_rdy);
+
+    if ((dout_high !== 8'h00) || (dout_low !== 8'h00) ||
+        (zero !== 1'b1) || (error !== 1'b0)) begin
+        $display("ERRO NO NOP1: saida deveria permanecer 0000 com zero=1");
+        errors = errors + 1;
+    end else begin
+        $display("OK NO NOP1: saida permaneceu igual.");
     end
 
     // ============================================================
