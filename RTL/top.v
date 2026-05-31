@@ -57,8 +57,11 @@ reg [1:0] flags_alu;
 wire [1:0] flags_reg_in;
 wire [1:0] flags_reg_out;
 
-assign memoryWriteData = {2*WIDTH{1'b0}};
-assign memoryAddress   = reg_a_out;
+// STORE grava o resultado atualmente registrado nas saidas.
+// dout_high ocupa a parte mais significativa; dout_low a menos significativa.
+assign memoryWriteData = {dout_high, dout_low};
+
+assign memoryAddress = reg_a_out;
 
 assign dout_data = (selmux2) ? memoryOutData : alu_out;
 
