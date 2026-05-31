@@ -588,7 +588,7 @@ initial begin
         $display("");
         $display("TESTE FALHOU: %0d erro(s).", errors);
     end
-
+ #600;
     $finish;
 end
 
