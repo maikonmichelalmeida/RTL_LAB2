@@ -12,8 +12,7 @@ reg  [WIDTH-1:0] din_1;
 reg  [WIDTH-1:0] din_2;
 reg  [WIDTH-1:0] din_3;
 
-wire [WIDTH-1:0] dout_low;
-wire [WIDTH-1:0] dout_high;
+wire [2*WIDTH-1:0] output_data;
 wire             cpu_rdy;
 wire             zero;
 wire             error;
@@ -67,8 +66,7 @@ top #(
     din_1,
     din_2,
     din_3,
-    dout_low,
-    dout_high,
+    output_data,
     cpu_rdy,
     zero,
     error
@@ -116,8 +114,8 @@ initial begin
 
     $display("");
     $display("RESET ATIVADO t=%0t", $time);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     #8;
     rst = 1'b0;
@@ -138,8 +136,8 @@ initial begin
              cmd_in, dut.datain_reg, dut.control_inst.cmd_in);
     $display("reg_a=%h reg_b=%h alu_out=%h",
              dut.reg_a_out, dut.reg_b_out, dut.alu_out);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     @(posedge clk);
     #1;
@@ -152,8 +150,8 @@ initial begin
              dut.mux_a_out, dut.mux_b_out);
     $display("reg_a=%h reg_b=%h alu_out=%h",
              dut.reg_a_out, dut.reg_b_out, dut.alu_out);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     @(posedge clk);
     #1;
@@ -168,8 +166,8 @@ initial begin
              dut.flags_reg_in, dut.flags_reg_out);
     $display("aluout_reg_en=%b dout_data=%h",
              dut.aluout_reg_en, dut.dout_data);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     cmd_in = CMD_SUB;
 
@@ -185,12 +183,11 @@ initial begin
              dut.datain_reg, dut.control_inst.cmd_in);
     $display("flags_reg_in=%b flags_reg_out=%b p_error=%b",
              dut.flags_reg_in, dut.flags_reg_out, dut.p_error);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
-    if ((dout_high !== 8'h00) || (dout_low !== 8'hCB) ||
-        (zero !== 1'b0) || (error !== 1'b0)) begin
-        $display("ERRO NA ADD: esperado dout_high=00 dout_low=CB zero=0 error=0");
+    if ((output_data !== 16'h00CB) || (zero !== 1'b0) || (error !== 1'b0)) begin
+        $display("ERRO NA ADD: esperado output_data=00CB zero=0 error=0");
         errors = errors + 1;
     end else begin
         $display("OK NA ADD: 200 + 3 = 203 = 16'h00CB");
@@ -213,8 +210,8 @@ initial begin
              dut.reg_a_out, dut.reg_b_out);
     $display("alu_op=%b alu_out=%h",
              dut.alu_op, dut.alu_out);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     @(posedge clk);
     #1;
@@ -229,8 +226,8 @@ initial begin
              dut.flags_reg_in, dut.flags_reg_out);
     $display("aluout_reg_en=%b dout_data=%h",
              dut.aluout_reg_en, dut.dout_data);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     cmd_in = CMD_MUL;
 
@@ -246,12 +243,11 @@ initial begin
              dut.datain_reg, dut.control_inst.cmd_in);
     $display("flags_reg_in=%b flags_reg_out=%b p_error=%b",
              dut.flags_reg_in, dut.flags_reg_out, dut.p_error);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
-    if ((dout_high !== 8'hFF) || (dout_low !== 8'h3A) ||
-        (zero !== 1'b0) || (error !== 1'b0)) begin
-        $display("ERRO NA SUB: esperado dout_high=FF dout_low=3A zero=0 error=0");
+    if ((output_data !== 16'hFF3A) || (zero !== 1'b0) || (error !== 1'b0)) begin
+        $display("ERRO NA SUB: esperado output_data=FF3A zero=0 error=0");
         errors = errors + 1;
     end else begin
         $display("OK NA SUB: 5 - 203 = -198 = 16'hFF3A");
@@ -274,8 +270,8 @@ initial begin
              dut.reg_a_out, dut.reg_b_out);
     $display("alu_op=%b alu_out=%h",
              dut.alu_op, dut.alu_out);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     @(posedge clk);
     #1;
@@ -290,8 +286,8 @@ initial begin
              dut.flags_reg_in, dut.flags_reg_out);
     $display("aluout_reg_en=%b dout_data=%h",
              dut.aluout_reg_en, dut.dout_data);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     cmd_in = CMD_DIV;
 
@@ -307,12 +303,11 @@ initial begin
              dut.datain_reg, dut.control_inst.cmd_in);
     $display("flags_reg_in=%b flags_reg_out=%b p_error=%b",
              dut.flags_reg_in, dut.flags_reg_out, dut.p_error);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
-    if ((dout_high !== 8'h03) || (dout_low !== 8'hE8) ||
-        (zero !== 1'b0) || (error !== 1'b0)) begin
-        $display("ERRO NA MUL: esperado dout_high=03 dout_low=E8 zero=0 error=0");
+    if ((output_data !== 16'h03E8) || (zero !== 1'b0) || (error !== 1'b0)) begin
+        $display("ERRO NA MUL: esperado output_data=03E8 zero=0 error=0");
         errors = errors + 1;
     end else begin
         $display("OK NA MUL: 200 * 5 = 1000 = 16'h03E8");
@@ -335,8 +330,8 @@ initial begin
              dut.reg_a_out, dut.reg_b_out);
     $display("alu_op=%b alu_out=%h",
              dut.alu_op, dut.alu_out);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     @(posedge clk);
     #1;
@@ -351,8 +346,8 @@ initial begin
              dut.flags_reg_in, dut.flags_reg_out);
     $display("aluout_reg_en=%b dout_data=%h",
              dut.aluout_reg_en, dut.dout_data);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     cmd_in = CMD_STORE;
 
@@ -368,12 +363,11 @@ initial begin
              dut.datain_reg, dut.control_inst.cmd_in);
     $display("flags_reg_in=%b flags_reg_out=%b p_error=%b",
              dut.flags_reg_in, dut.flags_reg_out, dut.p_error);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
-    if ((dout_high !== 8'h00) || (dout_low !== 8'h28) ||
-        (zero !== 1'b0) || (error !== 1'b0)) begin
-        $display("ERRO NA DIV: esperado dout_high=00 dout_low=28 zero=0 error=0");
+    if ((output_data !== 16'h0028) || (zero !== 1'b0) || (error !== 1'b0)) begin
+        $display("ERRO NA DIV: esperado output_data=0028 zero=0 error=0");
         errors = errors + 1;
     end else begin
         $display("OK NA DIV: 200 / 5 = 40 = 16'h0028");
@@ -394,8 +388,8 @@ initial begin
              dut.mux_a_out, dut.reg_a_out, dut.memoryAddress);
     $display("memoryWriteData=%h memoryWrite=%b memoryRead=%b",
              dut.memoryWriteData, dut.memoryWrite, dut.memoryRead);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     @(posedge clk);
     #1;
@@ -404,8 +398,8 @@ initial begin
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
     $display("memoryAddress=%h memoryWriteData=%h memoryWrite=%b memoryRead=%b",
              dut.memoryAddress, dut.memoryWriteData, dut.memoryWrite, dut.memoryRead);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     cmd_in = CMD_LOAD;
 
@@ -420,11 +414,10 @@ initial begin
     $display("memoryAddress=%h memoryWriteData=%h memoryWrite=%b memoryRead=%b",
              dut.memoryAddress, dut.memoryWriteData, dut.memoryWrite, dut.memoryRead);
     $display("memoryOutData=%h", dut.memoryOutData);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
-    if ((dout_high !== 8'h00) || (dout_low !== 8'h28) ||
-        (zero !== 1'b0) || (error !== 1'b0)) begin
+    if ((output_data !== 16'h0028) || (zero !== 1'b0) || (error !== 1'b0)) begin
         $display("ERRO NO STORE: saida deveria manter resultado anterior 0028");
         errors = errors + 1;
     end else begin
@@ -446,8 +439,8 @@ initial begin
              dut.mux_a_out, dut.reg_a_out, dut.memoryAddress);
     $display("memoryRead=%b memoryWrite=%b memoryOutData=%h",
              dut.memoryRead, dut.memoryWrite, dut.memoryOutData);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     @(posedge clk);
     #1;
@@ -458,8 +451,8 @@ initial begin
              dut.memoryAddress, dut.memoryRead, dut.memoryOutData, dut.selmux2);
     $display("dout_data=%h aluout_reg_en=%b",
              dut.dout_data, dut.aluout_reg_en);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     cmd_in = CMD_NOP0;
 
@@ -475,12 +468,11 @@ initial begin
              dut.memoryOutData, dut.selmux2);
     $display("flags_reg_in=%b flags_reg_out=%b p_error=%b",
              dut.flags_reg_in, dut.flags_reg_out, dut.p_error);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
-    if ((dout_high !== 8'h00) || (dout_low !== 8'h28) ||
-        (zero !== 1'b0) || (error !== 1'b0)) begin
-        $display("ERRO NO LOAD: esperado dout_high=00 dout_low=28 zero=0 error=0");
+    if ((output_data !== 16'h0028) || (zero !== 1'b0) || (error !== 1'b0)) begin
+        $display("ERRO NO LOAD: esperado output_data=0028 zero=0 error=0");
         errors = errors + 1;
     end else begin
         $display("OK NO LOAD: leu 16'h0028 da memoria.");
@@ -497,8 +489,8 @@ initial begin
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
     $display("cmd_in=%b datain_reg=%b control_cmd=%b",
              cmd_in, dut.datain_reg, dut.control_inst.cmd_in);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     @(posedge clk);
     #1;
@@ -506,8 +498,8 @@ initial begin
     $display("NOP0 - BORDA 2");
     $display("state=%b next=%b aluout_reg_en=%b",
              dut.control_inst.current_state, dut.control_inst.next_state, dut.aluout_reg_en);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     cmd_in = CMD_NOP1;
 
@@ -519,11 +511,10 @@ initial begin
     $display("");
     $display("NOP0 - BORDA 3: saida deve permanecer igual");
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
-    if ((dout_high !== 8'h00) || (dout_low !== 8'h28) ||
-        (zero !== 1'b0) || (error !== 1'b0)) begin
+    if ((output_data !== 16'h0028) || (zero !== 1'b0) || (error !== 1'b0)) begin
         $display("ERRO NO NOP0: saida deveria permanecer 0028 com zero=0");
         errors = errors + 1;
     end else begin
@@ -541,8 +532,8 @@ initial begin
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
     $display("cmd_in=%b datain_reg=%b control_cmd=%b",
              cmd_in, dut.datain_reg, dut.control_inst.cmd_in);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     @(posedge clk);
     #1;
@@ -550,8 +541,8 @@ initial begin
     $display("NOP1 - BORDA 2");
     $display("state=%b next=%b aluout_reg_en=%b",
              dut.control_inst.current_state, dut.control_inst.next_state, dut.aluout_reg_en);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     din_2  = 8'd7;
     cmd_in = CMD_MUL;
@@ -565,11 +556,10 @@ initial begin
     $display("");
     $display("NOP1 - BORDA 3: saida deve permanecer igual");
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
-    if ((dout_high !== 8'h00) || (dout_low !== 8'h28) ||
-        (zero !== 1'b0) || (error !== 1'b0)) begin
+    if ((output_data !== 16'h0028) || (zero !== 1'b0) || (error !== 1'b0)) begin
         $display("ERRO NO NOP1: saida deveria permanecer 0028 com zero=0");
         errors = errors + 1;
     end else begin
@@ -594,8 +584,8 @@ initial begin
              dut.reg_a_out, dut.reg_b_out);
     $display("alu_op=%b alu_out=%h",
              dut.alu_op, dut.alu_out);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     @(posedge clk);
     #1;
@@ -608,8 +598,8 @@ initial begin
              dut.alu_zero, dut.alu_error);
     $display("aluout_reg_en=%b dout_data=%h",
              dut.aluout_reg_en, dut.dout_data);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     cmd_in = CMD_STORE;
 
@@ -623,12 +613,11 @@ initial begin
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
     $display("datain_reg=%b control_cmd=%b",
              dut.datain_reg, dut.control_inst.cmd_in);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
-    if ((dout_high !== 8'h03) || (dout_low !== 8'hE8) ||
-        (zero !== 1'b0) || (error !== 1'b0)) begin
-        $display("ERRO NO MUL EXTRA: esperado dout_high=03 dout_low=E8 zero=0 error=0");
+    if ((output_data !== 16'h03E8) || (zero !== 1'b0) || (error !== 1'b0)) begin
+        $display("ERRO NO MUL EXTRA: esperado output_data=03E8 zero=0 error=0");
         errors = errors + 1;
     end else begin
         $display("OK NO MUL EXTRA: 200 * 5 = 1000 = 16'h03E8");
@@ -650,8 +639,8 @@ initial begin
              dut.mux_a_out, dut.reg_a_out, dut.memoryAddress);
     $display("memoryWriteData=%h memoryWrite=%b memoryRead=%b",
              dut.memoryWriteData, dut.memoryWrite, dut.memoryRead);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     @(posedge clk);
     #1;
@@ -660,8 +649,8 @@ initial begin
     $display("state=%b next=%b", dut.control_inst.current_state, dut.control_inst.next_state);
     $display("memoryAddress=%h memoryWriteData=%h memoryWrite=%b memoryRead=%b",
              dut.memoryAddress, dut.memoryWriteData, dut.memoryWrite, dut.memoryRead);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     cmd_in = CMD_LOAD;
 
@@ -676,11 +665,10 @@ initial begin
     $display("memoryAddress=%h memoryWriteData=%h memoryWrite=%b memoryRead=%b",
              dut.memoryAddress, dut.memoryWriteData, dut.memoryWrite, dut.memoryRead);
     $display("memoryOutData=%h", dut.memoryOutData);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
-    if ((dout_high !== 8'h03) || (dout_low !== 8'hE8) ||
-        (zero !== 1'b0) || (error !== 1'b0)) begin
+    if ((output_data !== 16'h03E8) || (zero !== 1'b0) || (error !== 1'b0)) begin
         $display("ERRO NO STORE EXTRA: saida deveria manter 03E8");
         errors = errors + 1;
     end else begin
@@ -703,8 +691,8 @@ initial begin
              dut.mux_a_out, dut.reg_a_out, dut.memoryAddress);
     $display("memoryRead=%b memoryWrite=%b memoryOutData=%h",
              dut.memoryRead, dut.memoryWrite, dut.memoryOutData);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     @(posedge clk);
     #1;
@@ -715,8 +703,8 @@ initial begin
              dut.memoryAddress, dut.memoryRead, dut.memoryOutData, dut.selmux2);
     $display("dout_data=%h aluout_reg_en=%b",
              dut.dout_data, dut.aluout_reg_en);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     cmd_in = CMD_NOP0;
 
@@ -732,12 +720,11 @@ initial begin
              dut.memoryOutData, dut.selmux2);
     $display("flags_reg_in=%b flags_reg_out=%b p_error=%b",
              dut.flags_reg_in, dut.flags_reg_out, dut.p_error);
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
-    if ((dout_high !== 8'h03) || (dout_low !== 8'hE8) ||
-        (zero !== 1'b0) || (error !== 1'b0)) begin
-        $display("ERRO NO LOAD EXTRA: esperado dout_high=03 dout_low=E8 zero=0 error=0");
+    if ((output_data !== 16'h03E8) || (zero !== 1'b0) || (error !== 1'b0)) begin
+        $display("ERRO NO LOAD EXTRA: esperado output_data=03E8 zero=0 error=0");
         errors = errors + 1;
     end else begin
         $display("OK NO LOAD EXTRA: leu 16'h03E8 da ultima posicao da memoria.");
@@ -752,8 +739,8 @@ initial begin
 
     $display("");
     $display("RESET FINAL ATIVADO");
-    $display("dout_high=%h dout_low=%h zero=%b error=%b cpu_rdy=%b",
-             dout_high, dout_low, zero, error, cpu_rdy);
+    $display("output_data=%h zero=%b error=%b cpu_rdy=%b",
+             output_data, zero, error, cpu_rdy);
 
     if (errors == 0) begin
         $display("");

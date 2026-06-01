@@ -9,8 +9,7 @@ module top #(
     input  wire [WIDTH-1:0] din_2,
     input  wire [WIDTH-1:0] din_3,
 
-    output wire [WIDTH-1:0] dout_low,
-    output wire [WIDTH-1:0] dout_high,
+    output wire [2*WIDTH-1:0] output_data,
     output wire             cpu_rdy,
     output wire             zero,
     output wire             error
@@ -19,6 +18,9 @@ module top #(
 wire [WIDTH-1:0] datain_reg;
 wire [WIDTH-1:0] datain_reg_din;
 wire             datain_reg_en;
+
+wire [WIDTH-1:0] dout_low;
+wire [WIDTH-1:0] dout_high;
 
 // cmd_in tem 7 bits; o regbank existente tem WIDTH=8.
 // Usamos datain_reg[6:0] para cmd_in e fixamos datain_reg[7] em 0.
@@ -56,6 +58,9 @@ reg [1:0] flags_alu;
 // Apenas sinais auxiliares para visualizacao no testbench.
 wire [1:0] flags_reg_in;
 wire [1:0] flags_reg_out;
+
+// Saida externa consolidada.
+assign output_data = {dout_high, dout_low};
 
 // STORE grava o resultado atualmente registrado nas saidas.
 // dout_high ocupa a parte mais significativa; dout_low a menos significativa.
@@ -186,7 +191,7 @@ regbank #(
     dout_low
 );
 
-always @(posedge clk or posedge rst) begin
+always @(posedge clk or posedge rst) begin : reg2bits
     if (rst) begin
         flags_alu <= 2'b00;
     end else if (aluout_reg_en) begin
