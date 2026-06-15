@@ -735,7 +735,7 @@ initial begin
     // ============================================================
 
     rst = 1'b1;
-    #2;
+    #3;
 
     $display("");
     $display("RESET FINAL ATIVADO");
