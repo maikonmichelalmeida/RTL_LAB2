@@ -23,7 +23,7 @@ wire [WIDTH-1:0] dout_low;
 wire [WIDTH-1:0] dout_high;
 
 // cmd_in tem 7 bits; o regbank existente tem WIDTH=8.
-// Usamos datain_reg[6:0] para cmd_in e fixamos datain_reg[7] em 0.
+// Usamos datain_reg[6:0] para cmd_in e fixamos datain_reg[7] em 0
 assign datain_reg_din = {1'b0, cmd_in};
 
 wire [1:0] in_select_a;
