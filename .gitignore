@@ -31,3 +31,6 @@ novas_dump.log
 
 # Configurações locais do editor
 .vscode/
+
+# Script local do Windows; não precisa existir no servidor
+/enviar.ps1
