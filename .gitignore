@@ -23,6 +23,7 @@ novas_dump.log
 **/outputs/
 **/outputs_*/
 **/dft/
+**/build/
 **/*.dlib/
 *.ddc
 *.svf
