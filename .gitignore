@@ -4,10 +4,30 @@ simv.daidir/
 csrc/
 *.log
 *.fsdb
+*.vdb/
 verdiLog/
 AN.DB/
 ucli.key
 novas.conf
+novas.rc
+novas_dump.log
+
+# Artefatos gerados pelos fluxos Synopsys
+**/run/*
+**/.run/*
+**/work/
+**/work_*/
+**/rpt/
+**/reports/
+**/reports_*/
+**/outputs/
+**/outputs_*/
+**/dft/
+**/*.dlib/
+*.ddc
+*.svf
+*.sdf
+*.saif
 
 # Configurações locais do editor
 .vscode/

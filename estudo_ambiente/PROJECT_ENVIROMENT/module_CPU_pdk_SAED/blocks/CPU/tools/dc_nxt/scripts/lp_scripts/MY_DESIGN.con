@@ -1,0 +1,20 @@
+# The unit of time in this library is 1ns 
+
+remove_sdc
+set_operating_conditions ss0p75v125c -library saed32lvt_ss0p75v125c
+
+create_clock -period 3.0 [get_ports clk]
+
+set_clock_latency -source  -max 0.7 [get_clocks clk] 
+set_clock_latency -max 0.3 [get_clocks clk]
+set_clock_uncertainty -setup 0.15 [get_clocks clk]
+set_clock_transition -max 0.12 [get_clocks clk]
+
+set_input_delay -max  0.45 -clock clk [remove_from_collection [all_inputs] [get_ports clk]]
+set_input_transition -max 0.12 [remove_from_collection [all_inputs] [get_ports clk]]
+
+set_output_delay -max  0.1  -clock clk [all_outputs]
+
+set_driving_cell -max -no_design_rule -lib_cell NBUFFX2_LVT -pin Y [remove_from_collection [all_inputs] [get_ports "clk"]]
+set_load -max 25 [all_outputs]
+

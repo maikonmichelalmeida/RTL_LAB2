@@ -1,5 +1,9 @@
 #correção do windows para linux no final do arquivo
 *.sh  text eol=lf
 *.v   text eol=lf
+*.sv  text eol=lf
 *.f   text eol=lf
+*.tcl text eol=lf
+*.sdc text eol=lf
+Makefile text eol=lf
 *.ps1 text eol=crlf
